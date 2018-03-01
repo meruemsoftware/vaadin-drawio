@@ -1,9 +1,11 @@
 package hu.meruem.vaadin.drawio
 
-import com.vaadin.annotations.Push
 import com.vaadin.server.VaadinRequest
 import com.vaadin.spring.annotation.SpringUI
-import com.vaadin.ui.*
+import com.vaadin.ui.Button
+import com.vaadin.ui.Panel
+import com.vaadin.ui.UI
+import com.vaadin.ui.VerticalLayout
 import java.nio.file.Paths
 
 @SpringUI
