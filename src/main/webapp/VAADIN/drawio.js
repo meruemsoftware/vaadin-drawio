@@ -1,26 +1,22 @@
-var DRAW_IFRAME_URL = 'https://www.draw.io/?embed=1';
 var graph = null;
 var xml = null;
 
-function mxClientOnLoad(stylesheet)
-{
+function mxClientOnLoad(stylesheet) {
 
 }
 
-function show(data) {
+function load(data) {
     xml = data;
     xml = decodeURIComponent(xml);
 
     // Removes all illegal control characters before parsing
     var checked = [];
 
-    for (var i = 0; i < xml.length; i++)
-    {
+    for (var i = 0; i < xml.length; i++) {
         var code = xml.charCodeAt(i);
 
         // Removes all control chars except TAB, LF and CR
-        if (code >= 32 || code == 9 || code == 10 || code == 13)
-        {
+        if (code >= 32 || code == 9 || code == 10 || code == 13) {
             checked.push(xml.charAt(i));
         }
     }
@@ -47,98 +43,55 @@ function show(data) {
     graph.fit();
     graph.center(true, false);
 
-    window.addEventListener('resize', function()
-    {
+    window.addEventListener('resize', function () {
         graph.fit();
         graph.center(true, false);
     });
 }
 
-function edit(data)
-{
-    show(data);
-    var border = 0;
-    var iframe = document.createElement('iframe');
-    iframe.style.zIndex = '9999';
-    iframe.style.position = 'absolute';
-    iframe.style.top = border + 'px';
-    iframe.style.left = border + 'px';
+function edit(data) {
+    load(data);
 
-    if (border == 0)
-    {
-        iframe.setAttribute('frameborder', '0');
-    }
-
-    var resize = function()
-    {
-        iframe.setAttribute('width', document.body.clientWidth - 2 * border);
-        iframe.setAttribute('height', document.body.clientHeight - 2 * border);
-    };
-
-    window.addEventListener('resize', resize);
-    resize();
-
-    var receive = function(evt)
-    {
-        if (evt.data == 'ready')
-        {
+    var receive = function (evt) {
+        if (evt.data == 'ready') {
+            var iframe = document.getElementById("drawio-iframe").firstElementChild;
             iframe.contentWindow.postMessage(xml, '*');
-            resize();
+
         }
-        else
-        {
-            if (evt.data.length > 0)
-            {
-                // Update the graph
-                var xmlDoc = mxUtils.parseXml(evt.data);
-                var codec = new mxCodec(xmlDoc);
-                codec.decode(codec.document.documentElement, graph.getModel());
-                graph.fit();
-                graph.center(true, false);
+        else if (evt.data.length > 0) {
+            // Update the graph
+            var xmlDoc = mxUtils.parseXml(evt.data);
+            var codec = new mxCodec(xmlDoc);
+            codec.decode(codec.document.documentElement, graph.getModel());
+            graph.fit();
+            graph.center(true, false);
 
-                var data = encodeURIComponent(evt.data);
-                window.saved(data);
-                /*
-                var idx = doc.indexOf('<div ' + 'id="mxfile"');
-                var newdoc = doc.substring(0, idx) + '\n<div ' + 'id="mxfile" style="display:none;">' +
-                    data + '</d' + 'iv>' +
-                    '\n<script type="text/javascript">\nvar doc = document.documentElement.outerHTML;\n</' + 'script>' +
-                    '\n<script type="text/javascript" src="https://www.draw.io/embed.js"></' + 'script></body></html>';
-
-                save(newdoc, location.pathname.substring(location.pathname.lastIndexOf("/") + 1));
-*/
-            }
-
-            window.removeEventListener('resize', resize);
+            var data = encodeURIComponent(evt.data);
+            window.saved(data);
+        }
+        //if exit
+        else {
+            window.exited();
             window.removeEventListener('message', receive);
-            document.body.removeChild(iframe);
         }
-    };
-
+    }
     window.addEventListener('message', receive);
-    iframe.setAttribute('src', DRAW_IFRAME_URL);
-    document.body.appendChild(iframe);
-}
+};
 
-function save(data, filename)
-{
-    try
-    {
-        if (mxClient.IS_QUIRKS || document.documentMode >= 8)
-        {
+function save(data, filename) {
+    try {
+        if (mxClient.IS_QUIRKS || document.documentMode >= 8) {
             var win = window.open('about:blank', '_blank');
             win.document.write(data);
             win.document.close();
             win.document.execCommand('SaveAs', true, filename);
             win.close();
         }
-        else if (mxClient.IS_SF)
-        {
+        else if (mxClient.IS_SF) {
             // Opens new tab (user saves file). No workaround to force dialog in Safari.
             window.open('data:application/octet-stream,' + encodeURIComponent(data), filename);
         }
-        else
-        {
+        else {
             var a = document.createElement('a');
 
             // NOTE: URL.revokeObjectURL(a.href) after click breaks download in FF
@@ -150,8 +103,7 @@ function save(data, filename)
             URL.revokeObjectURL(a.href);
         }
     }
-    catch (e)
-    {
+    catch (e) {
         console.log('error', e);
         console.log('html', data);
     }
